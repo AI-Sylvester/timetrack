@@ -10,6 +10,8 @@ import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 
 const API_URL = 'https://caferiadbnode.glitch.me' || 'http://localhost:5000';
+const COMPANY_NAME = 'Caferia';
+const CONTACT_NUMBER = '+91-9876543210';
 
 const formatTime = (timestamp) =>
   timestamp ? new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-';
@@ -105,10 +107,16 @@ const TicketStatus = () => {
 
   return (
     <Box p={{ xs: 2, sm: 3 }} bgcolor={theme.palette.grey[50]} minHeight="100vh">
+      {/* Company Name */}
+      <Typography variant="h4" textAlign="center" fontWeight="bold" mb={3} color="primary">
+        {COMPANY_NAME}
+      </Typography>
+
       <Typography variant="h5" textAlign="center" fontWeight="bold" mb={2} color="primary.dark">
         Order Track Report
       </Typography>
 
+      {/* Search Form */}
       <Paper elevation={1} sx={{ p: 2, maxWidth: 700, mx: 'auto', mb: 3, borderRadius: 2 }}>
         <Grid container spacing={1} alignItems="center">
           <Grid item xs={12} sm={5}>
@@ -162,6 +170,7 @@ const TicketStatus = () => {
         </Typography>
       </Paper>
 
+      {/* Results */}
       {loading ? (
         <Box textAlign="center"><CircularProgress /></Box>
       ) : (
@@ -205,6 +214,26 @@ const TicketStatus = () => {
                       </Box>
                     ))}
                   </Box>
+
+                  <Divider sx={{ my: 2 }} />
+
+                  {/* Thank You Message */}
+                  {status === '🍽️ Served' && (
+                    <Typography variant="body2" color="success.main" textAlign="center" fontWeight="medium" mb={1}>
+                      🎉 Thank you for your purchase!
+                    </Typography>
+                  )}
+
+                  {/* Footer Info */}
+                  <Typography variant="caption" display="block" textAlign="center" color="text.secondary">
+                    Please wait patiently while your food is being prepared.
+                  </Typography>
+                  <Typography variant="caption" display="block" textAlign="center" color="text.secondary" mb={1}>
+                    Estimated wait time: 15 to 30 minutes.
+                  </Typography>
+                  <Typography variant="caption" display="block" textAlign="center" color="text.secondary">
+                    📞 Contact us: {CONTACT_NUMBER}
+                  </Typography>
                 </Paper>
               );
             })
