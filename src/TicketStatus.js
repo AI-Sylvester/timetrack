@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import {
   Box, Typography, Button, TextField, CircularProgress, Divider,
@@ -37,6 +38,7 @@ const TicketStatus = () => {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const theme = useTheme();
+  const { ticketId } = useParams();
 
   const ticketDate = (() => {
     const today = new Date();
@@ -68,10 +70,22 @@ const TicketStatus = () => {
     fetchOrders();
   }, []);
 
+  useEffect(() => {
+    if (ticketId && orders.length > 0) {
+      setTicketSuffix(ticketId);
+      const fullTicketId = `${ticketDate}-${ticketId}`.toLowerCase();
+      const matched = orders.filter(order =>
+        order.ticketId.toLowerCase() === fullTicketId
+      );
+      setFiltered(matched);
+      setSubmitted(true);
+    }
+  }, [ticketId, orders, ticketDate]);
+
   const handleSearch = () => {
     setSubmitted(true);
-    const ticketId = ticketSuffix ? `${ticketDate}-${ticketSuffix}` : '';
-    const qTicket = ticketId.trim().toLowerCase();
+    const fullTicketId = ticketSuffix ? `${ticketDate}-${ticketSuffix}` : '';
+    const qTicket = fullTicketId.trim().toLowerCase();
     const qMobile = mobile.trim().toLowerCase();
 
     const matched = orders.filter(order =>
