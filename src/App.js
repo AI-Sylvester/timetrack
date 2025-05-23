@@ -1,24 +1,21 @@
-import logo from './logo.svg';
-import './App.css';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import TicketStatus from './TicketStatus';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <Routes>
+        {/* ✅ Redirect / to /ticket */}
+        <Route path="/" element={<Navigate to="/ticket" replace />} />
+        {/* ✅ Show search screen */}
+        <Route path="/ticket" element={<TicketStatus />} />
+        {/* ✅ Optional ID param */}
+        <Route path="/ticket/:ticketId" element={<TicketStatus />} />
+        {/* Optional: fallback for unknown routes */}
+        <Route path="*" element={<div style={{ textAlign: 'center' }}>404 Not Found</div>} />
+      </Routes>
+    </Router>
   );
 }
 
