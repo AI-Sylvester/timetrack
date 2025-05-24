@@ -42,47 +42,48 @@ const TicketStatus = () => {
   const theme = useTheme();
   const { ticketId } = useParams();
 
-  const ticketDate = (() => {
-    const today = new Date();
-    return `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
-  })();
+  const today = new Date();
+  const ticketDate = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+  const todayFormatted = today.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
 
   useEffect(() => {
-    const fetchOrders = async () => {
-      setLoading(true);
-      try {
-        const { data } = await axios.get(`${API_URL}/api/orders`);
-        const today = new Date();
-        const todayOrders = data.filter(order => {
-          const createdAt = new Date(order.createdAt);
-          return (
-            createdAt.getFullYear() === today.getFullYear() &&
-            createdAt.getMonth() === today.getMonth() &&
-            createdAt.getDate() === today.getDate()
-          );
-        });
-        setOrders(todayOrders);
-      } catch (error) {
-        console.error('Error fetching orders:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchOrders = async () => {
+    setLoading(true);
+    try {
+      const today = new Date(); // ✅ moved here
+      const { data } = await axios.get(`${API_URL}/api/orders`);
+      const todayOrders = data.filter(order => {
+        const createdAt = new Date(order.createdAt);
+        return (
+          createdAt.getFullYear() === today.getFullYear() &&
+          createdAt.getMonth() === today.getMonth() &&
+          createdAt.getDate() === today.getDate()
+        );
+      });
+      setOrders(todayOrders);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchOrders();
-  }, []);
+  fetchOrders();
+}, []);
+
 
   useEffect(() => {
-    if (ticketId && orders.length > 0) {
+    if (ticketId && orders.length > 0 && mobile.trim()) {
       setTicketSuffix(ticketId);
       const fullTicketId = `${ticketDate}-${ticketId}`.toLowerCase();
       const matched = orders.filter(order =>
-        order.ticketId.toLowerCase() === fullTicketId
+        order.ticketId.toLowerCase() === fullTicketId &&
+        order.customer.mobile.toLowerCase() === mobile.trim().toLowerCase()
       );
       setFiltered(matched);
       setSubmitted(true);
     }
-  }, [ticketId, orders, ticketDate]);
+  }, [ticketId, orders, ticketDate, mobile]);
 
   const handleSearch = () => {
     setSubmitted(true);
@@ -91,8 +92,9 @@ const TicketStatus = () => {
     const qMobile = mobile.trim().toLowerCase();
 
     const matched = orders.filter(order =>
-      (qTicket && order.ticketId.toLowerCase() === qTicket) ||
-      (qMobile && order.customer.mobile.toLowerCase() === qMobile)
+      qTicket && qMobile &&
+      order.ticketId.toLowerCase() === qTicket &&
+      order.customer.mobile.toLowerCase() === qMobile
     );
 
     setFiltered(matched);
@@ -107,47 +109,50 @@ const TicketStatus = () => {
 
   return (
     <Box p={{ xs: 2, sm: 3 }} bgcolor={theme.palette.grey[50]} minHeight="100vh">
-      {/* Company Name */}
-      <Typography variant="h4" textAlign="center" fontWeight="bold" mb={3} color="primary">
+      {/* Company Header */}
+      <Typography variant="h4" textAlign="center" fontWeight="bold" mb={1} color="primary">
         {COMPANY_NAME}
       </Typography>
 
-      <Typography variant="h5" textAlign="center" fontWeight="bold" mb={2} color="primary.dark">
-        Order Track Report
+      <Typography variant="h5" textAlign="center" fontWeight="bold" mb={1} color="primary.dark">
+        Track Your Order
+      </Typography>
+
+      <Typography variant="subtitle2" textAlign="center" color="text.secondary" mb={3}>
+        Today's Date: <strong>{todayFormatted}</strong>
       </Typography>
 
       {/* Search Form */}
-      <Paper elevation={1} sx={{ p: 2, maxWidth: 700, mx: 'auto', mb: 3, borderRadius: 2 }}>
-        <Grid container spacing={1} alignItems="center">
-          <Grid item xs={12} sm={5}>
+      <Paper elevation={2} sx={{ p: 3, maxWidth: 700, mx: 'auto', mb: 4, borderRadius: 3 }}>
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
               label="Ticket ID (Last 4 digits)"
               value={ticketSuffix}
               onChange={(e) => setTicketSuffix(e.target.value)}
               size="small"
+              variant="outlined"
             />
           </Grid>
-          <Grid item xs={12} sm="auto">
-            <Typography textAlign="center" color="text.secondary" variant="body2" fontWeight="medium">OR</Typography>
-          </Grid>
-          <Grid item xs={12} sm={5}>
+          <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
               label="Mobile Number"
               value={mobile}
               onChange={(e) => setMobile(e.target.value)}
               size="small"
+              variant="outlined"
+              required
             />
           </Grid>
           <Grid item xs={6}>
             <Button
               fullWidth
               variant="contained"
-              size="small"
               startIcon={<SearchIcon />}
               onClick={handleSearch}
-              disabled={loading}
+              disabled={loading || !ticketSuffix || !mobile}
             >
               Submit
             </Button>
@@ -157,7 +162,6 @@ const TicketStatus = () => {
               fullWidth
               variant="outlined"
               color="secondary"
-              size="small"
               startIcon={<ClearIcon />}
               onClick={handleClear}
             >
@@ -165,9 +169,6 @@ const TicketStatus = () => {
             </Button>
           </Grid>
         </Grid>
-        <Typography variant="caption" color="text.secondary" mt={1} display="block">
-          Searching from today's records: <strong>{ticketDate}</strong>
-        </Typography>
       </Paper>
 
       {/* Results */}
@@ -176,7 +177,9 @@ const TicketStatus = () => {
       ) : (
         submitted && (
           filtered.length === 0 ? (
-            <Typography textAlign="center" color="text.secondary">No matching records found.</Typography>
+            <Typography textAlign="center" color="error" fontWeight="medium" mt={2}>
+              No records found.
+            </Typography>
           ) : (
             filtered.map(order => {
               const ts = order.statusTimestamps || {};
@@ -191,7 +194,7 @@ const TicketStatus = () => {
               ].filter(step => step.time);
 
               return (
-                <Paper key={order._id} elevation={2} sx={{ p: 2, mb: 3, maxWidth: 700, mx: 'auto', borderRadius: 2 }}>
+                <Paper key={order._id} elevation={3} sx={{ p: 3, mb: 4, maxWidth: 720, mx: 'auto', borderRadius: 3 }}>
                   <Typography variant="subtitle1" fontWeight="bold">
                     🎟️ {order.ticketId} - {order.customer.name}
                   </Typography>
@@ -217,14 +220,12 @@ const TicketStatus = () => {
 
                   <Divider sx={{ my: 2 }} />
 
-                  {/* Thank You Message */}
                   {status === '🍽️ Served' && (
                     <Typography variant="body2" color="success.main" textAlign="center" fontWeight="medium" mb={1}>
                       🎉 Thank you for your purchase!
                     </Typography>
                   )}
 
-                  {/* Footer Info */}
                   <Typography variant="caption" display="block" textAlign="center" color="text.secondary">
                     Please wait patiently while your food is being prepared.
                   </Typography>
