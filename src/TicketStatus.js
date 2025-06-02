@@ -5,7 +5,7 @@ import axios from 'axios';
 import {
   Box, Typography, Button, TextField, CircularProgress, Divider,
   Chip, Paper, Grid, useTheme, Dialog, DialogTitle, DialogContent, DialogActions,
-  useMediaQuery
+ 
 } from '@mui/material';
 
 import SearchIcon from '@mui/icons-material/Search';
@@ -25,10 +25,10 @@ const formatDuration = (start, end) => {
 };
 
 const getCurrentStatus = (ts) => {
-  if (ts.served) return '🍽️ Served';
-  if (ts.ready) return '✅ Ready';
-  if (ts.preparing) return '🛠️ Preparing';
-  if (ts.onBoard) return '🟢 OnBoard';
+  if (ts.served) return 'Served';
+  if (ts.ready) return 'Ready';
+  if (ts.preparing) return 'Preparing';
+  if (ts.onBoard) return 'OnBoard';
   return '🕑 Waiting';
 };
 
@@ -52,7 +52,7 @@ const TicketStatus = () => {
   const [error, setError] = useState('');
   const [newStatusAvailable, setNewStatusAvailable] = useState(false);
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   const { ticketId } = useParams();
   const lastStatusesRef = useRef({});
 
@@ -174,42 +174,64 @@ const TicketStatus = () => {
         Track Your Order
       </Typography>
 
-      <Dialog open={!submitted} disableEscapeKeyDown fullScreen={isMobile}>
-        <DialogTitle>Confirm Your Details</DialogTitle>
-        <DialogContent dividers>
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Ticket ID (Last 4 digits)"
-                value={ticketSuffix}
-                onChange={(e) => setTicketSuffix(e.target.value)}
-                size="small"
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Mobile Number"
-                value={mobile}
-                onChange={(e) => setMobile(e.target.value)}
-                size="small"
-              />
-            </Grid>
-            {error && (
-              <Grid item xs={12}>
-                <Typography variant="body2" color="error">{error}</Typography>
-              </Grid>
-            )}
-          </Grid>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClear} color="secondary" startIcon={<ClearIcon />}>Clear</Button>
-          <Button onClick={handleSearch} variant="contained" startIcon={<SearchIcon />} disabled={loading}>
-            Submit
-          </Button>
-        </DialogActions>
-      </Dialog>
+     <Dialog
+  open={!submitted}
+  disableEscapeKeyDown
+  fullWidth
+  maxWidth="xs"
+  PaperProps={{
+    sx: {
+      borderRadius: 3,
+      px: 2,
+      py: 1,
+    },
+  }}
+>
+  <DialogTitle>Confirm Your Details</DialogTitle>
+ <DialogContent
+  dividers
+  sx={{
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    textAlign: 'center',
+  }}
+>
+  <Grid container spacing={2} justifyContent="center">
+    <Grid item xs={12}>
+      <TextField
+        fullWidth
+        label="Ticket ID (Last 4 digits)"
+        value={ticketSuffix}
+        onChange={(e) => setTicketSuffix(e.target.value)}
+        size="small"
+      />
+    </Grid>
+    <Grid item xs={12}>
+      <TextField
+        fullWidth
+        label="Mobile Number"
+        value={mobile}
+        onChange={(e) => setMobile(e.target.value)}
+        size="small"
+      />
+    </Grid>
+    {error && (
+      <Grid item xs={12}>
+        <Typography variant="body2" color="error" align="center">
+          {error}
+        </Typography>
+      </Grid>
+    )}
+  </Grid>
+</DialogContent>
+  <DialogActions>
+    <Button onClick={handleClear} color="secondary" startIcon={<ClearIcon />}>Clear</Button>
+    <Button onClick={handleSearch} variant="contained" startIcon={<SearchIcon />} disabled={loading}>
+      Submit
+    </Button>
+  </DialogActions>
+</Dialog>
 
       {loading && (
         <Box textAlign="center" mt={4}>
@@ -248,7 +270,7 @@ const TicketStatus = () => {
         return (
           <Paper key={order._id} elevation={3} sx={{ p: 3, mb: 4, maxWidth: 720, mx: 'auto', borderRadius: 3 }}>
             <Typography variant="subtitle1" fontWeight="bold">
-              🎟️ {order.ticketId} - {order.customer.name}
+               {order.ticketId} - {order.customer.name}
             </Typography>
             <Chip label={status} color="primary" size="small" sx={{ my: 1 }} />
             <Typography variant="body2"><strong>Mobile:</strong> {order.customer.mobile}</Typography>
@@ -257,9 +279,9 @@ const TicketStatus = () => {
             <OrderStatusTimeline order={order} />
             <Divider sx={{ my: 2 }} />
 
-            {status === '🍽️ Served' && (
+            {status === ' Served' && (
               <Typography variant="body2" color="success.main" textAlign="center" fontWeight="medium" mb={1}>
-                🎉 Thank you for your purchase!
+                 Thank you for your purchase!
               </Typography>
             )}
 
