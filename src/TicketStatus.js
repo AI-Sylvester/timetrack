@@ -1,21 +1,20 @@
+// TicketStatus.jsx
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import {
   Box, Typography, Button, TextField, CircularProgress, Divider,
-  Chip, Paper, Grid, useTheme, Dialog, DialogTitle, DialogContent, DialogActions
+  Chip, Paper, Grid, useTheme, Dialog, DialogTitle, DialogContent, DialogActions,
+  useMediaQuery
 } from '@mui/material';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
+
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
+import OrderStatusTimeline from './OrderTimeline';
 
-// 🔧 Hardcoded API URL here
 const API_URL = 'https://caferiadbnode.glitch.me';
 const COMPANY_NAME = 'Caferia';
 const CONTACT_NUMBER = '+91-9876543210';
-
-const formatTime = (timestamp) =>
-  timestamp ? new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-';
 
 const formatDuration = (start, end) => {
   if (!start || !end) return '-';
@@ -33,11 +32,9 @@ const getCurrentStatus = (ts) => {
   return '🕑 Waiting';
 };
 
-// Move filterOrders outside component to avoid eslint warning
 const filterOrders = (allOrders, suffix, mob, ticketDate) => {
   const fullTicketId = suffix ? `${ticketDate}-${suffix}`.toLowerCase() : '';
   const qMobile = mob.trim().toLowerCase();
-
   return allOrders.filter(
     (order) =>
       order.ticketId.toLowerCase() === fullTicketId &&
@@ -55,9 +52,8 @@ const TicketStatus = () => {
   const [error, setError] = useState('');
   const [newStatusAvailable, setNewStatusAvailable] = useState(false);
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const { ticketId } = useParams();
-
-  // To keep track of last statuses for polling comparison
   const lastStatusesRef = useRef({});
 
   const ticketDate = (() => {
@@ -87,18 +83,15 @@ const TicketStatus = () => {
 
   const handleSearch = () => {
     setError('');
-
     if (!/^\d{10}$/.test(mobile.trim())) {
       setError('Enter a valid 10-digit mobile number.');
       return;
     }
 
     const matched = filterOrders(orders, ticketSuffix, mobile, ticketDate);
-
     if (matched.length > 0) {
       setFiltered(matched);
       setSubmitted(true);
-      // Initialize lastStatusesRef on search
       const statuses = {};
       matched.forEach(order => {
         statuses[order._id] = order.statusTimestamps || {};
@@ -121,7 +114,6 @@ const TicketStatus = () => {
     lastStatusesRef.current = {};
   };
 
-  // Poll every 30 seconds to check for status updates if submitted
   useEffect(() => {
     if (!submitted) return;
 
@@ -131,9 +123,7 @@ const TicketStatus = () => {
         setOrders(data);
 
         const matched = filterOrders(data, ticketSuffix, mobile, ticketDate);
-
         if (matched.length === 0) {
-          // No matching orders found on refresh
           setFiltered([]);
           setError('No matching records found on update.');
           setNewStatusAvailable(false);
@@ -141,13 +131,10 @@ const TicketStatus = () => {
           return;
         }
 
-        // Check if any status changed compared to lastStatusesRef
         let statusChanged = false;
         matched.forEach(order => {
           const prev = lastStatusesRef.current[order._id] || {};
           const curr = order.statusTimestamps || {};
-
-          // Compare timestamps keys and values
           const keys = new Set([...Object.keys(prev), ...Object.keys(curr)]);
           for (let key of keys) {
             if ((prev[key] || '') !== (curr[key] || '')) {
@@ -159,9 +146,7 @@ const TicketStatus = () => {
 
         if (statusChanged) {
           setNewStatusAvailable(true);
-          // Update filtered orders too so UI can update
           setFiltered(matched);
-          // Update lastStatusesRef for next comparison
           const statuses = {};
           matched.forEach(order => {
             statuses[order._id] = order.statusTimestamps || {};
@@ -178,7 +163,6 @@ const TicketStatus = () => {
 
   return (
     <Box p={{ xs: 2, sm: 4 }} bgcolor={theme.palette.background.default} color={theme.palette.text.primary} minHeight="100vh">
-
       <Typography variant="h4" textAlign="center" fontWeight="bold" mb={1} color="primary">
         {COMPANY_NAME}
       </Typography>
@@ -190,8 +174,7 @@ const TicketStatus = () => {
         Track Your Order
       </Typography>
 
-      {/* MODAL: Mobile Number Confirmation */}
-      <Dialog open={!submitted} disableEscapeKeyDown>
+      <Dialog open={!submitted} disableEscapeKeyDown fullScreen={isMobile}>
         <DialogTitle>Confirm Your Details</DialogTitle>
         <DialogContent dividers>
           <Grid container spacing={2}>
@@ -228,14 +211,12 @@ const TicketStatus = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Loading Spinner */}
       {loading && (
         <Box textAlign="center" mt={4}>
           <CircularProgress />
         </Box>
       )}
 
-      {/* Notification Badge for New Status */}
       {newStatusAvailable && (
         <Box
           sx={{
@@ -259,44 +240,21 @@ const TicketStatus = () => {
         </Box>
       )}
 
-      {/* Orders Display */}
       {!loading && submitted && filtered.length > 0 && filtered.map(order => {
         const ts = order.statusTimestamps || {};
         const status = getCurrentStatus(ts);
         const totalTime = formatDuration(ts.onBoard, ts.served);
 
-        const timelineSteps = [
-          { label: '🟢 OnBoard', time: ts.onBoard },
-          { label: '🛠️ Preparing', time: ts.preparing },
-          { label: '✅ Ready', time: ts.ready },
-          { label: '🍽️ Served', time: ts.served },
-        ].filter(step => step.time);
-
         return (
-          <Paper key={order._id} elevation={2} sx={{ p: 3, mb: 4, maxWidth: 720, mx: 'auto', borderRadius: 3 }}>
+          <Paper key={order._id} elevation={3} sx={{ p: 3, mb: 4, maxWidth: 720, mx: 'auto', borderRadius: 3 }}>
             <Typography variant="subtitle1" fontWeight="bold">
               🎟️ {order.ticketId} - {order.customer.name}
             </Typography>
             <Chip label={status} color="primary" size="small" sx={{ my: 1 }} />
             <Typography variant="body2"><strong>Mobile:</strong> {order.customer.mobile}</Typography>
             <Typography variant="body2" mb={2}><strong>Total Time:</strong> {totalTime}</Typography>
-
             <Divider sx={{ mb: 2 }} />
-
-            <Box sx={{ borderLeft: '3px solid #1976d2', pl: 2 }}>
-              {timelineSteps.map((step, index) => (
-                <Box key={index} mb={index < timelineSteps.length - 1 ? 2 : 0}>
-                  <Typography variant="body2" fontWeight="medium">
-                    {step.label}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    <AccessTimeIcon fontSize="small" sx={{ verticalAlign: 'middle' }} /> {formatTime(step.time)}
-                  </Typography>
-                  {index < timelineSteps.length - 1 && <Divider sx={{ mt: 1 }} />}
-                </Box>
-              ))}
-            </Box>
-
+            <OrderStatusTimeline order={order} />
             <Divider sx={{ my: 2 }} />
 
             {status === '🍽️ Served' && (
