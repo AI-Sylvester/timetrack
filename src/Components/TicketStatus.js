@@ -4,9 +4,9 @@ import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import {
   Box, Typography, Button, TextField, CircularProgress, Divider,
-  Chip, Paper, Grid, Dialog, DialogTitle, DialogContent, DialogActions,
+  Chip, Paper, Grid, Dialog, DialogTitle, DialogContent, DialogActions,Tooltip,IconButton
 } from '@mui/material';
-
+import InfoOutlined from '@mui/icons-material/InfoOutlined';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import OrderStatusTimeline from './OrderTimeline';
@@ -54,6 +54,8 @@ const TicketStatus = () => {
   const audioRef = useRef(null);
   const { ticketId } = useParams();
   const lastStatusesRef = useRef({});
+const [dialogOpen, setDialogOpen] = useState(false);
+const [selectedOrder, setSelectedOrder] = useState(null);
 
   const ticketDate = (() => {
     const today = new Date();
@@ -314,6 +316,35 @@ const TicketStatus = () => {
           🔔 New status update available! .
         </Box>
       )}
+<Dialog
+  open={dialogOpen}
+  onClose={() => setDialogOpen(false)}
+  maxWidth="xs"
+  fullWidth
+  PaperProps={{ sx: { borderRadius: 2 } }}
+>
+  <DialogTitle sx={{ fontWeight: 'bold', color: '#000' }}>
+    Order Items
+  </DialogTitle>
+  <DialogContent dividers sx={{ color: '#000' }}>
+    {selectedOrder?.items?.length ? (
+      <Box component="ul" sx={{ pl: 2, mb: 0 }}>
+        {selectedOrder.items.map((item, idx) => (
+          <li key={idx}>
+            {item.title} × {item.qty} - ₹{item.qty * item.rate}
+          </li>
+        ))}
+      </Box>
+    ) : (
+      <Typography variant="body2">No item details available.</Typography>
+    )}
+  </DialogContent>
+  <DialogActions>
+    <Button onClick={() => setDialogOpen(false)} color="primary">
+      Close
+    </Button>
+  </DialogActions>
+</Dialog>
 
         {!loading && submitted && filtered.length > 0 && filtered.map(order => {
           const ts = order.statusTimestamps || {};
@@ -326,9 +357,24 @@ const TicketStatus = () => {
               elevation={3}
               sx={{ p: 3, mb: 4, maxWidth: 720, mx: 'auto', borderRadius: 3, color: '#000' }}
             >
-              <Typography variant="subtitle1" fontWeight="bold" color="#000">
-                {order.ticketId} - {order.customer.name}
-              </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+  <Typography variant="subtitle1" fontWeight="bold" color="#000">
+    {order.ticketId} - {order.customer.name}
+  </Typography>
+  <Tooltip title="View Order Items">
+    <IconButton
+      size="small"
+      onClick={() => {
+        setSelectedOrder(order);
+        setDialogOpen(true);
+      }}
+      sx={{ color: '#000' }}
+    >
+      <InfoOutlined fontSize="small" />
+    </IconButton>
+  </Tooltip>
+</Box>
+
               <Chip label={status} color="primary" size="small" sx={{ my: 1 }} />
               <Typography variant="body2" color="#000"><strong>Mobile:</strong> {order.customer.mobile}</Typography>
               <Typography variant="body2" mb={2} color="#000"><strong>Total Time:</strong> {totalTime}</Typography>
