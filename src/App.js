@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import TicketStatus from './TicketStatus';
+import TicketStatus from './Components/TicketStatus';
 
 function App() {
   return (
