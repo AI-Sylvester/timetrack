@@ -11,7 +11,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import OrderStatusTimeline from './OrderTimeline';
 import Logo from './logo.png';
-import Beep from './ORT.mp3';
+import Seep from './ORT.mp3';
 const API_URL = 'https://caferiadbnode.glitch.me';
 const COMPANY_NAME = 'Cafe`ria';
 const CONTACT_NUMBER = '+91-9876543210';
@@ -293,7 +293,7 @@ const [selectedOrder, setSelectedOrder] = useState(null);
           </Box>
         )}
 
-        <audio ref={audioRef} src={Beep} preload="auto" />
+        <audio ref={audioRef} src={Seep} preload="auto" />
       {newStatusAvailable && (
         <Box
           sx={{
