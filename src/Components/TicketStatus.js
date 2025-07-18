@@ -12,7 +12,7 @@ import ClearIcon from '@mui/icons-material/Clear';
 import OrderStatusTimeline from './OrderTimeline';
 import Logo from './logo.png';
 import Seep from './cute.mp3';
-const API_URL = 'https://caferiadbnode.glitch.me';
+const API_URL = 'https://cafe-j4aj.onrender.com';
 const COMPANY_NAME = 'Cafe`ria';
 const CONTACT_NUMBER = '+91-9876543210';
 
